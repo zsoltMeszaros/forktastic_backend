@@ -5,7 +5,7 @@ require('dotenv/config')
 
 const app = express();
 
-// middlewares
+// middleware functions
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({extended: false}));
