@@ -24,21 +24,6 @@ mongoose.connect(
 	}
 );
 
-app.get('/', (req, res) => {
-	res.send('<h2> /api to get the routes');
-});
-
-app.get('/api', (req, res) => {
-	routes = `
-        <h1>Forktastic backend application</h1>
-        <h2>API routes available:</h1>
-        <p>/api/users</p>
-        <p>/api/user/{id}</p>
-        <p>/api/recipe/{id}</p>
-    `;
-
-	res.send(routes);
-});
 
 const PORT = process.env.PORT || 5000;
 

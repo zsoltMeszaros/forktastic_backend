@@ -13,7 +13,14 @@ const userSchema = mongoose.Schema({
 		type: String,
 		required: true,
 	},
-	recipes: Array,
+	recipes: {
+		type: Array,
+		required: true,
+	},
+	date: {
+		type: Date,
+		default: Date.now
+	}
 });
 
 module.exports = mongoose.model('Users', userSchema);

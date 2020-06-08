@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../../models/User');
+const bcrypt = require('bcrypt');
+const {registerValidation, loginValidation} = require("../validation")
+
 
 router.get('/', async (req, res) => {
 	try {
@@ -31,35 +34,46 @@ router.get('/:username', async (req, res) => {
 	} catch (err) {
 		res.json({ message: err });
 	}
-
-	console.log(user);
 });
 
-router.post('/', async (req, res) => {
-	const newUser = new User({
-		username: req.body.username,
-		password: req.body.password,
-		email: req.body.email,
-	});
 
-	const users = await User.find();
-	const usernameExists = users.some(
-		(user) => user.username == newUser.username
-	);
-	const emailExists = users.some((user) => user.email == newUser.email);
+router.post('/register', async (req, res) => {
 
-	if (usernameExists) {
-		res.json({ message: 'Username already exists' });
-	} else if (emailExists) {
-		res.json({ message: 'Email already registered' });
-	} else {
-		try {
-			const savedUser = await newUser.save();
-			res.json(savedUser);
-		} catch (err) {
-			res.json({ message: err });
+	const error = registerValidation(req.body);
+
+	if(error == null){
+
+		let hashedPw = bcrypt.hashSync(req.body.password, 10);
+
+		const newUser = new User({
+			username: req.body.username,
+			password: hashedPw,
+			email: req.body.email,
+			recipes: []
+		});
+
+		const users = await User.find();
+		const usernameExists = users.some(
+			(user) => user.username == newUser.username
+		);
+		const emailExists = users.some((user) => user.email == newUser.email);
+
+		if (usernameExists) {
+			res.json({ message: 'Username already exists' });
+		} else if (emailExists) {
+			res.json({ message: 'Email already registered' });
+		} else {
+			try {
+				const savedUser = await newUser.save();
+				res.json(savedUser);
+			} catch (err) {
+				res.json({ message: err });
+			}
 		}
+	}else{
+		res.json({message: error.details[0].message});
 	}
+
 });
 
 module.exports = router;
