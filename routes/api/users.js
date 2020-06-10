@@ -2,19 +2,11 @@ const express = require('express');
 const router = express.Router();
 const User = require('../../models/User');
 const bcrypt = require('bcrypt');
-const {registerValidation, loginValidation} = require("../validation")
+const jwt = require('jsonwebtoken');
+const { registerValidation, loginValidation } = require('../validation');
 
 
-router.get('/', async (req, res) => {
-	try {
-		const users = await User.find();
-		res.json(users);
-	} catch (err) {
-		res.json({ message: err });
-	}
-});
-
-router.get('/:username', async (req, res) => {
+router.get('/user/:username', async (req, res) => {
 	try {
 		const users = await User.find();
 		const found = users.some(
@@ -36,44 +28,53 @@ router.get('/:username', async (req, res) => {
 	}
 });
 
-
 router.post('/register', async (req, res) => {
 
-	const error = registerValidation(req.body);
+	const {error} = registerValidation(req.body);
 
-	if(error == null){
+	console.log(error)
+	if (error != null) return res.status(400).json({ message: error.details[0].message });
 
-		let hashedPw = bcrypt.hashSync(req.body.password, 10);
+	let hashedPw = bcrypt.hashSync(req.body.password, 13);
 
-		const newUser = new User({
-			username: req.body.username,
-			password: hashedPw,
-			email: req.body.email,
-			recipes: []
-		});
+	const newUser = new User({
+		username: req.body.username,
+		password: hashedPw,
+		email: req.body.email,
+		recipes: [],
+	});
 
-		const users = await User.find();
-		const usernameExists = users.some(
-			(user) => user.username == newUser.username
-		);
-		const emailExists = users.some((user) => user.email == newUser.email);
+	const users = await User.find();
 
-		if (usernameExists) {
-			res.json({ message: 'Username already exists' });
-		} else if (emailExists) {
-			res.json({ message: 'Email already registered' });
-		} else {
-			try {
-				const savedUser = await newUser.save();
-				res.json(savedUser);
-			} catch (err) {
-				res.json({ message: err });
-			}
-		}
-	}else{
-		res.json({message: error.details[0].message});
+	const emailExists = users.some((user) => user.email == newUser.email);
+	if (emailExists) return res.status(400).json({ message: 'Email already registered' });
+
+	const usernameExists = users.some( (user) => user.username == newUser.username );
+	if (usernameExists) return res.status(400).json({ message: 'Username already exists' });
+
+	try {
+		console.log(newUser);
+		const savedUser = await newUser.save();
+		res.json({ user: savedUser } );
+	} catch (e) {
+		res.status(400).json({ message: e });
 	}
+});
 
+router.post('/login', async (req, res) => {
+	const { error } = loginValidation(req.body);
+
+	if (error != null) return res.status(400).json({ message: error.details[0].message });
+
+	const user = await User.findOne({ username: req.body.username });
+	if (user == null) return res.status(400).json({ message: 'username not found!' });
+
+	const validPass = await bcrypt.compare(req.body.password, user.password);
+
+	if (!validPass) return res.status(400).json({ message: 'Invalid Password!' });
+
+	const token = jwt.sign( { _id : user._id}, process.env.TOKEN);
+	res.header('auth-token', token).send(token);
 });
 
 module.exports = router;

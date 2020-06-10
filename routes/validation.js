@@ -7,7 +7,7 @@ const registerValidation = (data) => {
         email: Joi.string().min(6).required(),
     });
 
-    const {error} = schema.validate(data);
+    const error = schema.validate(data);
 
     return error;
 }
@@ -19,7 +19,7 @@ const loginValidation = (data) => {
         password: Joi.string().min(6).required()
     });
 
-    const {error} = schema.validate(data);
+    const error = schema.validate(data);
 
     return error;
 }
