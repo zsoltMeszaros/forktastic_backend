@@ -1,13 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 require('dotenv/config');
+require('cookie-parser');
 
 const app = express();
 
 // middleware functions
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 
 app.use('/api/users', require('./routes/api/users'));

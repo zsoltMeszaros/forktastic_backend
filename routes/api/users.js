@@ -32,7 +32,6 @@ router.post('/register', async (req, res) => {
 
 	const {error} = registerValidation(req.body);
 
-	console.log(error)
 	if (error != null) return res.status(400).json({ message: error.details[0].message });
 
 	let hashedPw = bcrypt.hashSync(req.body.password, 13);
@@ -55,7 +54,7 @@ router.post('/register', async (req, res) => {
 	try {
 		console.log(newUser);
 		const savedUser = await newUser.save();
-		res.json({ user: savedUser } );
+		res.json({ message: 'Registered.', user: savedUser.id } );
 	} catch (e) {
 		res.status(400).json({ message: e });
 	}
@@ -74,7 +73,8 @@ router.post('/login', async (req, res) => {
 	if (!validPass) return res.status(400).json({ message: 'Invalid Password!' });
 
 	const token = jwt.sign( { _id : user._id}, process.env.TOKEN);
-	res.header('auth-token', token).send(token);
+
+	res.cookie('jwt',token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 12 }).send('Successful Login.');
 });
 
 module.exports = router;
